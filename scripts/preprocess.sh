@@ -1,0 +1,2 @@
+
+python -m transformers.run_glue --model_name_or_path './results' --task_name mnli --do_train --do_eval --data_dir ./glue_data/glue_data/mnli --max_seq_length 256 --per_device_train_batch_size 32 --learning_rate 2e-5 --num_train_epochs 1.0 --output_dir ./tmp/mnli/
