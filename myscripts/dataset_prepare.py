@@ -8,9 +8,12 @@ def main():
     logging.basicConfig(level=logging.INFO)
     
     tokenizer = AlbertTokenizer.from_pretrained('albert-base-v2')
-    data_path = 'D:/ConvbertData/text_data'
+    data_path = 'E:/ConvbertData/text_data'
     for filename in os.listdir(data_path):
-        create_dataset_cache(tokenizer, os.path.join(data_path, filename), overwrite_cache=False)
+        fpath = os.path.join(data_path, filename)
+        if not os.path.isfile(fpath):
+            continue
+        create_dataset_cache(tokenizer, fpath, overwrite_cache=False)
 
 
 if __name__ == '__main__':
