@@ -1,5 +1,6 @@
 from transformers import Trainer, TrainingArguments
 from transformers import AlbertTokenizer, ConvbertForPreTraining, ConvbertConfig
+from transformers import AlbertForPreTraining, AlbertConfig
 from dataset import SOPDataset, MyTrainer
 import os
 
@@ -19,7 +20,22 @@ def get_last_checkpoint(dir_name):
                 result = filename
     return os.path.join(dir_name, result)
 
-BATCH_SIZE = 30
+
+def init_convbert_model(config):
+    model = ConvbertForPreTraining(config)
+    ready_model = AlbertForPreTraining.from_pretrained('albert-base-v2')
+    model.convbert.set_input_embeddings(ready_model.albert.get_input_embeddings())
+    return model
+
+
+def init_albert_model(config):
+    model = AlbertForPreTraining(config)
+    ready_model = AlbertForPreTraining.from_pretrained('albert-base-v2')
+    model.convbert.set_input_embeddings(ready_model.albert.get_input_embeddings())
+    return model
+
+
+BATCH_SIZE = 24
 
 tokenizer = AlbertTokenizer.from_pretrained('albert-base-v2')
 tokenizer.save_pretrained(model_dir)
@@ -30,12 +46,15 @@ training_args = TrainingArguments(
     overwrite_output_dir=True,
     num_train_epochs=10,              # total # of training epochs
     per_device_train_batch_size=BATCH_SIZE,  # batch size per device during training
-    warmup_steps=500,                # number of warmup steps for learning rate scheduler
-    weight_decay=0.000001,               # strength of weight decay
+    warmup_steps=0,                # number of warmup steps for learning rate scheduler
+    weight_decay=0.00006,               # strength of weight decay
     logging_dir=logs,            # directory for storing logs
-    gradient_accumulation_steps=32,
-    learning_rate=0.001,
-    dataloader_num_workers=2
+    gradient_accumulation_steps=3*64,
+    learning_rate=0.000306,
+    dataloader_num_workers=2,
+    logging_steps=100,
+    save_total_limit=10,
+    save_steps=200
 )
 
 from torch.utils.tensorboard import SummaryWriter

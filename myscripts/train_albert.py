@@ -3,10 +3,10 @@ from transformers import AlbertTokenizer, AlbertForPreTraining, AlbertConfig
 from dataset import SOPDataset, MyTrainer
 import os
 
-model_dir = 'E:/ConvbertData/albert3/model_dir'
-output_dir = 'E:/ConvbertData/albert3/output'
-logs = 'E:/ConvbertData/albert3/logs'
-runs = 'E:/ConvbertData/albert3/runs'
+model_dir = 'E:/ConvbertData/albert/model_dir'
+output_dir = 'E:/ConvbertData/albert/output'
+logs = 'E:/ConvbertData/albert/logs'
+runs = 'E:/ConvbertData/albert/runs'
 
 def get_last_checkpoint(dir_name):
     max_check = -1
@@ -34,10 +34,10 @@ training_args = TrainingArguments(
     num_train_epochs=10,              # total # of training epochs
     per_device_train_batch_size=BATCH_SIZE,  # batch size per device during training
     warmup_steps=2500,                # number of warmup steps for learning rate scheduler
-    weight_decay=0.000003,               # strength of weight decay
+    weight_decay=0.00001,               # strength of weight decay
     logging_dir=logs,            # directory for storing logs
-    gradient_accumulation_steps=64,
-    learning_rate=0.0005,
+    gradient_accumulation_steps=4*64,
+    learning_rate=0.00176,
     dataloader_num_workers=2
 )
 
@@ -48,14 +48,14 @@ writer = SummaryWriter(runs)
 
 config = AlbertConfig(hidden_size=768, num_attention_heads=12, intermediate_size=3072, attention_probs_dropout_prob=0, num_hidden_groups=1, num_hidden_layers=12)
 config.save_pretrained(model_dir)
-#model = AlbertForPreTraining(config)
-model = AlbertForPreTraining.from_pretrained(checkpoint)
+model = AlbertForPreTraining(config)
+#model = AlbertForPreTraining.from_pretrained(checkpoint)
 model.save_pretrained(model_dir)
 
 
 
 trainer = MyTrainer(model=model, args=training_args, train_dataset=train_dataset, prediction_loss_only=True, tb_writer=writer)
 
-trainer.train(model_path=checkpoint)
+trainer.train(model_path=model_dir)
 trainer.save_model(model_dir)
 

@@ -2,9 +2,9 @@ from params import *
 
 
 
-config = ConvbertConfig(hidden_size=768, num_attention_heads=12, intermediate_size=3072, attention_probs_dropout_prob=0, num_hidden_groups=4, num_hidden_layers=8, kernel_size=255)
+config = ConvbertConfig(hidden_size=768, num_attention_heads=12, intermediate_size=3072, attention_probs_dropout_prob=0, num_hidden_groups=1, num_hidden_layers=12, kernel_size=255)
 config.save_pretrained(model_dir)
-model = ConvbertForPreTraining(config)
+model = init_convbert_model(config)
 model.save_pretrained(model_dir)
 
 
