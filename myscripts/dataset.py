@@ -9,11 +9,13 @@ from torch.utils.data import IterableDataset, DataLoader
 import torch
 
 from transformers.tokenization_utils import PreTrainedTokenizer
-from transformers import Trainer
+from transformers import Trainer, get_polynomial_decay_schedule_with_warmup
 from tqdm import tqdm
 from random import random, shuffle, randint
 import numpy as np
 import collections
+
+from lamb import Lamb
 
 logger = logging.getLogger(__name__)
 
@@ -93,6 +95,8 @@ def create_masked_lm_predictions(tokens, masked_lm_prob, max_predictions_per_seq
     # Skip current piece if they are covered in lm masking or previous ngrams.
     for index_set in cand_index_set[0]:
       for index in index_set:
+        if index in tokenizer.additional_special_tokens:
+          continue
         if index in covered_indexes:
           continue
 
@@ -209,8 +213,8 @@ def create_instances_from_document(document, tokenizer, masked_lm_prob, max_seq_
         example = tokenizer(tokens_a, tokens_b, is_split_into_words=True, truncation=True, padding='max_length')
         example['sentence_order_label'] = is_random_next
 
-        example["input_ids"], masked_lm_labels = create_masked_lm_predictions(example["input_ids"], masked_lm_prob, max_predictions_per_seq, tokenizer)
-        example["labels"] = masked_lm_labels
+        #example["input_ids"], masked_lm_labels = create_masked_lm_predictions(example["input_ids"], masked_lm_prob, max_predictions_per_seq, tokenizer)
+        #example["labels"] = masked_lm_labels
         #if random() > 0.99:
         #  print(example)
         instances.append(example)
@@ -266,61 +270,33 @@ class SOPBatch():
             self.data[k] = self.data[k].pin_memory()
         return self.data
 
+    def to(self, device):
+        for k in self.data:
+            self.data[k] = self.data[k].to(device)
+        return self.data
+
 
 def old_collate_batch(input, tokenizer, mlm_probability):
     batch = dict()
     for k, _ in input[0].items():
-        batch[k] = torch.LongTensor([f[k] for f in input])
+        batch[k] = torch.cuda.LongTensor([f[k] for f in input])
     #print(len(input))
     
     if tokenizer.mask_token is None:
         raise ValueError(
             "This tokenizer does not have a mask token which is necessary for masked language modeling. Remove the --mlm flag if you want to use this tokenizer."
         )
-
-    labels = batch['input_ids'].clone()
-    inputs = batch['input_ids']
-    #print(inputs)
-    # We sample a few tokens in each sequence for masked-LM training (with probability args.mlm_probability defaults to 0.15 in Bert/RoBERTa)
-    probability_matrix = torch.full(labels.shape, mlm_probability)
-    special_tokens_mask = [
-        tokenizer.get_special_tokens_mask(val, already_has_special_tokens=True) for val in labels.tolist()
-    ]
-    probability_matrix.masked_fill_(torch.tensor(special_tokens_mask, dtype=torch.bool), value=0.0)
-    if tokenizer._pad_token is not None:
-        padding_mask = labels.eq(tokenizer.pad_token_id)
-        probability_matrix.masked_fill_(padding_mask, value=0.0)
-    masked_indices = torch.bernoulli(probability_matrix).bool()
-    labels[~masked_indices] = -100  # We only compute loss on masked tokens
-
-    # 80% of the time, we replace masked input tokens with tokenizer.mask_token ([MASK])
-    indices_replaced = torch.bernoulli(torch.full(labels.shape, 0.8)).bool() & masked_indices
-    #print("indices_replaced words: ")
-    #print(inputs[indices_replaced])
-    inputs[indices_replaced] = tokenizer.convert_tokens_to_ids(tokenizer.mask_token)
-    #print("replaced: " + str(indices_replaced.sum(1)))
-
-    # 10% of the time, we replace masked input tokens with random word
-    indices_random = torch.bernoulli(torch.full(labels.shape, 0.5)).bool() & masked_indices & ~indices_replaced
-    random_words = torch.randint(len(tokenizer), labels.shape, dtype=torch.long)
-    #print("random words: ")
-    #print(inputs[indices_random])
-    #print(random_words[indices_random])
-    inputs[indices_random] = random_words[indices_random]
-    batch['input_ids'] = inputs
-    batch['labels'] = labels
-    #print("random: " + str(indices_random.sum(1)))
-    #print("masked total: " + str(masked_indices.sum(1)))
-    # The rest of the time (10% of the time) we keep the masked input tokens unchanged
-    #print("id words: ")
-    #print(inputs[masked_indices & ~indices_replaced & ~indices_random])
     return SOPBatch(batch)
 
 
 def collate_batch(input, tokenizer, mlm_probability):
     batch = dict()
-    for k, _ in input[0].items():
-        batch[k] = torch.LongTensor([f[k] for f in input])
+    labeled_input = []
+    for example in input:
+        example["input_ids"], example["labels"] = create_masked_lm_predictions(example["input_ids"], mlm_probability, 20, tokenizer)
+        labeled_input.append(example)
+    for k, _ in labeled_input[0].items():
+        batch[k] = torch.cuda.LongTensor([f[k] for f in labeled_input])
     #print(len(input))
     
     if tokenizer.mask_token is None:
@@ -363,6 +339,7 @@ class SOPDataset(IterableDataset):
 
 def empty_collate(data):
     return data
+
 
 class MyTrainer(Trainer):
     def get_train_dataloader(self):
@@ -413,3 +390,34 @@ class MyTrainer(Trainer):
         )
 
         return data_loader
+
+    def create_optimizer_and_scheduler(self, num_training_steps: int):
+        """
+        Setup the optimizer and the learning rate scheduler.
+
+        We provide a reasonable default that works well. If you want to use something else, you can pass a tuple in the
+        Trainer's init through :obj:`optimizers`, or subclass and override this method in a subclass.
+        """
+        if self.optimizer is None:
+            no_decay = ["bias", "LayerNorm.weight"]
+            optimizer_grouped_parameters = [
+                {
+                    "params": [p for n, p in self.model.named_parameters() if not any(nd in n for nd in no_decay)],
+                    "weight_decay": self.args.weight_decay,
+                },
+                {
+                    "params": [p for n, p in self.model.named_parameters() if any(nd in n for nd in no_decay)],
+                    "weight_decay": 0.0,
+                },
+            ]
+            self.optimizer = Lamb(
+                optimizer_grouped_parameters,
+                lr=self.args.learning_rate,
+                betas=(self.args.adam_beta1, self.args.adam_beta2),
+                eps=self.args.adam_epsilon,
+                weight_decay=self.args.weight_decay
+            )
+        if self.lr_scheduler is None:
+            self.lr_scheduler = get_polynomial_decay_schedule_with_warmup(
+                self.optimizer, num_warmup_steps=self.args.warmup_steps, num_training_steps=num_training_steps, lr_end=0.0
+            )

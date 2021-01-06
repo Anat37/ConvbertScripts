@@ -8,7 +8,7 @@ def main():
     logging.basicConfig(level=logging.INFO)
     
     tokenizer = AlbertTokenizer.from_pretrained('albert-base-v2')
-    data_path = 'E:/ConvbertData/text_data'
+    data_path = 'E:/ConvbertData/text_test'
     for filename in os.listdir(data_path):
         fpath = os.path.join(data_path, filename)
         if not os.path.isfile(fpath):
