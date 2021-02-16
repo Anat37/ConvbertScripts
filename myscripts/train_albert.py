@@ -3,10 +3,10 @@ from transformers import AlbertTokenizer, AlbertForPreTraining, AlbertConfig
 from dataset import SOPDataset, MyTrainer
 import os
 
-model_dir = 'E:/ConvbertData/albert/model_dir'
-output_dir = 'E:/ConvbertData/albert/output'
-logs = 'E:/ConvbertData/albert/logs'
-runs = 'E:/ConvbertData/albert/runs'
+model_dir = 'E:/ConvbertData/albert_/model_dir'
+output_dir = 'E:/ConvbertData/albert_/output'
+logs = 'E:/ConvbertData/albert_/logs'
+runs = 'E:/ConvbertData/albert_/runs'
 
 def get_last_checkpoint(dir_name):
     max_check = -1
@@ -19,10 +19,10 @@ def get_last_checkpoint(dir_name):
                 result = filename
     return os.path.join(dir_name, result)
 
-checkpoint = get_last_checkpoint(output_dir)
-print(checkpoint)
+#checkpoint = get_last_checkpoint(output_dir)
+#print(checkpoint)
 
-BATCH_SIZE = 16
+BATCH_SIZE = 8
 
 tokenizer = AlbertTokenizer.from_pretrained('albert-base-v2')
 tokenizer.save_pretrained(model_dir)

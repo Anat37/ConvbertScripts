@@ -279,7 +279,7 @@ class SOPBatch():
 def old_collate_batch(input, tokenizer, mlm_probability):
     batch = dict()
     for k, _ in input[0].items():
-        batch[k] = torch.cuda.LongTensor([f[k] for f in input])
+        batch[k] = torch.LongTensor([f[k] for f in input])
     #print(len(input))
     
     if tokenizer.mask_token is None:
@@ -296,7 +296,7 @@ def collate_batch(input, tokenizer, mlm_probability):
         example["input_ids"], example["labels"] = create_masked_lm_predictions(example["input_ids"], mlm_probability, 20, tokenizer)
         labeled_input.append(example)
     for k, _ in labeled_input[0].items():
-        batch[k] = torch.cuda.LongTensor([f[k] for f in labeled_input])
+        batch[k] = torch.LongTensor([f[k] for f in labeled_input])
     #print(len(input))
     
     if tokenizer.mask_token is None:
@@ -315,11 +315,12 @@ class SOPDataset(IterableDataset):
         if len(parts) == 0:
             logger.error("No cache found")
         worker_info = torch.utils.data.get_worker_info()
+        self.all_files_cnt = len(parts)
         if worker_info is None:
             self.files = parts
         else:
             worker_id = worker_info.id
-            self.files = [f for f in parts if int(f[-2:]) % worker_info.num_workers == worker_id]
+            self.files = [f for f in parts if (int(f[-2:]) % worker_info.num_workers) == worker_id]
         self.files = [os.path.join(directory, f) for f in self.files]
         shuffle(self.files)
 
@@ -335,7 +336,7 @@ class SOPDataset(IterableDataset):
                     offset += self.batch_size
 
     def __len__(self):
-        return 100000 * len(self.files) // self.batch_size
+        return 100000 * self.all_files_cnt // self.batch_size
 
 def empty_collate(data):
     return data
@@ -350,7 +351,9 @@ class MyTrainer(Trainer):
             self.train_dataset,
             batch_size=None,
             collate_fn=empty_collate,
-            pin_memory=True
+            pin_memory=True,
+            drop_last=self.args.dataloader_drop_last,
+            num_workers=self.args.dataloader_num_workers,
         )
 
         return data_loader
@@ -371,7 +374,9 @@ class MyTrainer(Trainer):
             eval_dataset,
             batch_size=None,
             collate_fn=empty_collate,
-            pin_memory=True
+            pin_memory=True,
+            drop_last=self.args.dataloader_drop_last,
+            num_workers=self.args.dataloader_num_workers,
         )
 
         return data_loader
@@ -386,7 +391,9 @@ class MyTrainer(Trainer):
             test_dataset,
             batch_size=None,
             collate_fn=empty_collate,
-            pin_memory=True
+            pin_memory=True,
+            drop_last=self.args.dataloader_drop_last,
+            num_workers=self.args.dataloader_num_workers,
         )
 
         return data_loader
