@@ -27,7 +27,7 @@ def init_convbert_model(config):
 def init_albert_model(config):
     model = AlbertForPreTraining(config)
     ready_model = AlbertForPreTraining.from_pretrained('albert-base-v2')
-    model.convbert.set_input_embeddings(ready_model.albert.get_input_embeddings())
+    model.albert.set_input_embeddings(ready_model.albert.get_input_embeddings())
     return model
 
 def get_params(model_name, batch_size):
