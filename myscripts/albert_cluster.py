@@ -60,7 +60,7 @@ def get_params(model_name, batch_size):
 
 
 def main():
-    training_args, train_dataset, model_dir, _ = get_params('albert', 8)
+    training_args, train_dataset, model_dir, _ = get_params('albert', 16)
     config = ConvbertConfig(hidden_size=768, num_attention_heads=12, intermediate_size=3072, attention_probs_dropout_prob=0, num_hidden_groups=1, num_hidden_layers=12, kernel_size=255)
     config.save_pretrained(model_dir)
     model = init_albert_model(config)
