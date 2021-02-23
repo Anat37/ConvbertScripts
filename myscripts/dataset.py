@@ -336,7 +336,7 @@ class SOPDataset(IterableDataset):
                     offset += self.batch_size
 
     def __len__(self):
-        return 100000 * self.all_files_cnt // self.batch_size
+        return 200000 * self.all_files_cnt // self.batch_size
 
 def empty_collate(data):
     return data
