@@ -31,13 +31,13 @@ def init_albert_model(config):
     return model
 
 def get_params(model_name, batch_size):
-    model_dir = f'/home/kozlovan/models/{model_name}/model_dir'
-    output_dir = f'/home/kozlovan/models/{model_name}/output'
-    logs = f'/home/kozlovan/models/{model_name}/logs'
+    model_dir = f'/home/akozlov/models/{model_name}/model_dir'
+    output_dir = f'/home/akozlov/models/{model_name}/output'
+    logs = f'/home/akozlov/models/{model_name}/logs'
 
     tokenizer = AlbertTokenizer.from_pretrained('albert-base-v2')
     tokenizer.save_pretrained(model_dir)
-    train_dataset = SOPDataset(directory='/home/kozlovan/data/cache', batch_size=batch_size, tokenizer=tokenizer, mlm_probability=0.15)
+    train_dataset = SOPDataset(directory='/home/akozlov/data/cache', batch_size=batch_size, tokenizer=tokenizer, mlm_probability=0.15)
 
     training_args = TrainingArguments(
         output_dir=output_dir,          # output directory
