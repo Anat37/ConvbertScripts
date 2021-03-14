@@ -93,12 +93,15 @@ def create_masked_lm_predictions(tokens, masked_lm_prob, max_predictions_per_seq
       continue
     # Note(mingdachen):
     # Skip current piece if they are covered in lm masking or previous ngrams.
+    skip_index_set = False
     for index_set in cand_index_set[0]:
       for index in index_set:
         if index in tokenizer.additional_special_tokens:
-          continue
+          skip_index_set = True
         if index in covered_indexes:
-          continue
+          skip_index_set = True
+    if skip_index_set:
+      continue
 
     n = np.random.choice(ngrams[:len(cand_index_set)],
                          p=pvals[:len(cand_index_set)] /
@@ -293,8 +296,11 @@ def collate_batch(input, tokenizer, mlm_probability):
     batch = dict()
     labeled_input = []
     for example in input:
+        #print(example)
+        #print(tokenizer.convert_ids_to_tokens(example["input_ids"]))
         example["input_ids"], example["labels"] = create_masked_lm_predictions(example["input_ids"], mlm_probability, 20, tokenizer)
         labeled_input.append(example)
+    #print(labeled_input)
     for k, _ in labeled_input[0].items():
         batch[k] = torch.LongTensor([f[k] for f in labeled_input])
     #print(len(input))
