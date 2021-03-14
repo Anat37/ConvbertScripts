@@ -55,13 +55,16 @@ def main():
     training_args, train_dataset, model_dir, output_dir = get_params('albert', 16)
     checkpoint = get_last_checkpoint(output_dir)
 
+    config = AlbertConfig(hidden_size=768, num_attention_heads=12, intermediate_size=3072, attention_probs_dropout_prob=0, num_hidden_groups=1, num_hidden_layers=12)
+    config.save_pretrained(model_dir)
+
     model = AlbertForPreTraining.from_pretrained(checkpoint)
     model = init_albert_model(model)
     model.save_pretrained(model_dir)
 
     trainer = MyTrainer(model=model, args=training_args, train_dataset=train_dataset, prediction_loss_only=True)
 
-    trainer.train(model_path=checkpoint)
+    trainer.train(model_path=model_dir)
     trainer.save_model(model_dir)
 
 

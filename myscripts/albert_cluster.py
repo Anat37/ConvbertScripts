@@ -17,13 +17,6 @@ def get_last_checkpoint(dir_name):
     return os.path.join(dir_name, result)
 
 
-def init_convbert_model(config):
-    model = ConvbertForPreTraining(config)
-    ready_model = AlbertForPreTraining.from_pretrained('albert-base-v2')
-    model.convbert.set_input_embeddings(ready_model.albert.get_input_embeddings())
-    return model
-
-
 def init_albert_model(config):
     model = AlbertForPreTraining(config)
     ready_model = AlbertForPreTraining.from_pretrained('albert-base-v2')
@@ -61,7 +54,7 @@ def get_params(model_name, batch_size):
 
 def main():
     training_args, train_dataset, model_dir, _ = get_params('albert', 16)
-    config = ConvbertConfig(hidden_size=768, num_attention_heads=12, intermediate_size=3072, attention_probs_dropout_prob=0, num_hidden_groups=1, num_hidden_layers=12, kernel_size=255)
+    config = AlbertConfig(hidden_size=768, num_attention_heads=12, intermediate_size=3072, attention_probs_dropout_prob=0, num_hidden_groups=1, num_hidden_layers=12)
     config.save_pretrained(model_dir)
     model = init_albert_model(config)
     model.save_pretrained(model_dir)
