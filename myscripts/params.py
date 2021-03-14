@@ -23,11 +23,10 @@ def init_convbert_model(config):
     model.convbert.set_input_embeddings(ready_model.albert.get_input_embeddings())
     return model
 
-
 def init_albert_model(config):
     model = AlbertForPreTraining(config)
     ready_model = AlbertForPreTraining.from_pretrained('albert-base-v2')
-    model.convbert.set_input_embeddings(ready_model.albert.get_input_embeddings())
+    model.albert.set_input_embeddings(ready_model.albert.get_input_embeddings())
     return model
 
 def get_params(model_name, batch_size):
@@ -47,7 +46,7 @@ def get_params(model_name, batch_size):
         warmup_steps=500,                # number of warmup steps for learning rate scheduler
         weight_decay=0.01,               # strength of weight decay
         logging_dir=logs,            # directory for storing logs
-        gradient_accumulation_steps=3*64,
+        gradient_accumulation_steps=64,
         learning_rate=0.001506,
         dataloader_num_workers=3,
         logging_steps=100,

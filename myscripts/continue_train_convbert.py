@@ -7,7 +7,7 @@ def init_convbert_model(model):
     return model
 
 def main():
-    training_args, train_dataset, model_dir, output_dir = get_params('convbert', 16)
+    training_args, train_dataset, model_dir, output_dir = get_params('convbert', 18)
 
     checkpoint = get_last_checkpoint(output_dir)
     
