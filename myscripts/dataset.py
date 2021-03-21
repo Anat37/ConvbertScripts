@@ -84,6 +84,7 @@ def create_masked_lm_predictions(tokens, masked_lm_prob, max_predictions_per_seq
   
   shuffle(ngram_indexes)
 
+  spec_tokens_mask = tokenizer.get_special_tokens_mask(tokens, already_has_special_tokens=True)
   masked_lms = []
   covered_indexes = set()
   for cand_index_set in ngram_indexes:
@@ -96,7 +97,7 @@ def create_masked_lm_predictions(tokens, masked_lm_prob, max_predictions_per_seq
     skip_index_set = False
     for index_set in cand_index_set[0]:
       for index in index_set:
-        if index in tokenizer.additional_special_tokens:
+        if spec_tokens_mask[index] == 1:
           skip_index_set = True
         if index in covered_indexes:
           skip_index_set = True
@@ -151,6 +152,7 @@ def create_masked_lm_predictions(tokens, masked_lm_prob, max_predictions_per_seq
   for p in masked_lms:
     labels[p.index] = p.label
 
+  assert(labels[0] == -100)
   return (input_tokens, labels)
 
 
