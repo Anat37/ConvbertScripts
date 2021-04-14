@@ -72,7 +72,7 @@ def main():
     print(model.convbert.encoder.kernel_size)
     if continuation:
         checkpoint = get_last_checkpoint(output_dir)
-        trainer.train(model_path=checkpoint)
+        trainer.train(model_path=model_dir)
     else:
         trainer.train(model_path=model_dir)
     trainer.save_model(model_dir)
