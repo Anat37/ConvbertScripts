@@ -2,22 +2,32 @@ import torch
 from transformers import Trainer, TrainingArguments
 from transformers import AlbertConfig, AlbertTokenizer, AlbertForPreTraining, ConvbertForPreTraining
 from dataset import SOPDataset, MyTrainer, collate_batch
+import os
 
-
-model_dir = 'E:/ConvbertData/convbert/model_dir'
+model_dir = 'E:/ConvbertData/convbert/output'
 #model_dir = 'D:/ConvbertData/albert_model_dir'
 
+def get_last_checkpoint(dir_name):
+    max_check = -1
+    result = None
+    for filename in os.listdir(dir_name):
+        if 'checkpoint' in filename:
+            step = int(filename.split('-')[1])
+            if step > max_check:
+                max_check = step
+                result = filename
+    return os.path.join(dir_name, result)
 
 tokenizer = AlbertTokenizer.from_pretrained('albert-base-v2')
-config = AlbertConfig(hidden_size=768, num_attention_heads=12, intermediate_size=3072, attention_probs_dropout_prob=0, num_hidden_groups=1, num_hidden_layers=12)
+#config = AlbertConfig(hidden_size=768, num_attention_heads=12, intermediate_size=3072, attention_probs_dropout_prob=0, num_hidden_groups=1, num_hidden_layers=12)
 #config.save_pretrained(model_dir)
 #model = ConvbertForPreTraining(config)
 #model = AlbertForPreTraining(config)
-model = AlbertForPreTraining.from_pretrained('albert-base-v1')
-#model = ConvbertForPreTraining.from_pretrained(model_dir)
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-model = model.to(device)
-train_dataset = SOPDataset(directory='E:/ConvbertData/text_data/cache', batch_size=11, tokenizer=tokenizer, mlm_probability=0.15)
+#model = AlbertForPreTraining.from_pretrained('albert-base-v1')
+#model = ConvbertForPreTraining.from_pretrained(get_last_checkpoint(model_dir))
+#device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+#model = model.to(device)
+train_dataset = SOPDataset(directory='E:/ConvbertData/text_data/cache', batch_size=1, tokenizer=tokenizer, mlm_probability=0.15)
 
 #seg1 = tokenizer.tokenize("Planar graph. In graph theory,") # a planar graph is a graph that can be embedded in the plane, i.e.") # , it can be drawn on the plane in such a way that its edges intersect only at their endpoints. In other words, it can be drawn in such a way that no edges cross each other. Such a drawing is called a plane graph or planar embedding of the graph.")
 #seg2 = tokenizer.tokenize("A plane graph can be defined as a planar graph with a mapping from every node to a point on a plane") # , and from every edge to a plane curve on that plane, such that the extreme points of each curve are the points mapped from its end nodes, and all curves are disjoint except on their extreme points. Every graph that can be drawn on a plane can be drawn on the sphere as well, and vice versa, by means of stereographic projection. Plane graphs can be encoded by combinatorial maps. The equivalence class of topologically equivalent drawings on the sphere is called a planar map.")
@@ -41,9 +51,16 @@ train_dataset = SOPDataset(directory='E:/ConvbertData/text_data/cache', batch_si
 #model.train(False)
 
 import time
+print(tokenizer.convert_tokens_to_ids(tokenizer.mask_token))
+print(tokenizer.convert_ids_to_tokens(4))
+print(tokenizer.convert_ids_to_tokens(13))
+print(tokenizer.convert_ids_to_tokens(18))
+#for batch in iter(train_dataset):
+    #outputs = model(torch.cuda.LongTensor([input_ids['input_ids']]), token_type_ids=torch.cuda.LongTensor([input_ids['token_type_ids']]))
+    #start = time.time()
+    #model(**batch.data)
+    #print(time.time() - start)
 
 for batch in iter(train_dataset):
-    #outputs = model(torch.cuda.LongTensor([input_ids['input_ids']]), token_type_ids=torch.cuda.LongTensor([input_ids['token_type_ids']]))
-    start = time.time()
-    model(**batch.data)
-    print(time.time() - start)
+    print(batch.data)
+    break

@@ -18,12 +18,12 @@ def get_last_checkpoint(dir_name):
                 result = filename
     return os.path.join(dir_name, result)
 
-#checkpoint = get_last_checkpoint(output_dir)
-#print(checkpoint)
-#model = AutoModelForPreTraining.from_pretrained(checkpoint)
-#model.save_pretrained(model_dir)
+checkpoint = get_last_checkpoint(output_dir)
+print(checkpoint)
+model = AutoModelForPreTraining.from_pretrained(checkpoint)
+model.save_pretrained(model_dir)
 
 from transformers import AlbertTokenizer, AlbertForPreTraining, AlbertConfig
 
-model = AlbertForPreTraining.from_pretrained('albert-base-v1')
-model.save_pretrained('E:/ConvbertData/albert_ready/model_dir')
+#model = AlbertForPreTraining.from_pretrained('albert-base-v1')
+#model.save_pretrained('E:/ConvbertData/albert_ready/model_dir')

@@ -8,7 +8,7 @@ from transformers import TextDataset, DataCollatorForLanguageModeling
 from dataset import SOPDataset, MyTrainer
 import os
 
-model_dir = 'E:/ConvbertData/model_dir'
+model_dir = 'E:/ConvbertData/convbert/output'
 #model_dir = 'E:/ConvbertData/albert_model_dir'
 logs = 'E:/ConvbertData/logs'
 runs = 'E:/ConvbertData/runs/convbert'
@@ -27,17 +27,17 @@ def get_last_checkpoint(dir_name):
     return os.path.join(dir_name, result)
 
 tokenizer = AlbertTokenizer.from_pretrained('albert-base-v2')
-config = ConvbertConfig(hidden_size=768, num_attention_heads=12, intermediate_size=3072, attention_probs_dropout_prob=0, num_hidden_groups=4, num_hidden_layers=4)
-config.save_pretrained(model_dir)
+#config = ConvbertConfig(hidden_size=768, num_attention_heads=12, intermediate_size=3072, attention_probs_dropout_prob=0, num_hidden_groups=4, num_hidden_layers=4)
+#config.save_pretrained(model_dir)
 #model = ConvbertForPreTraining(config)
 #model = AlbertForPreTraining(config)
 #model = AlbertForPreTraining.from_pretrained('albert-base-v2')
 model = ConvbertForPreTraining.from_pretrained(get_last_checkpoint(model_dir))
-model.save_pretrained(model_dir)
+#model.save_pretrained(model_dir)
 #model = AlbertForPreTraining.from_pretrained(model_dir)
-tokenizer.save_pretrained(model_dir)
+#tokenizer.save_pretrained(model_dir)
 
-train_dataset = SOPDataset(directory='E:/ConvbertData/text_data2/cache', batch_size=28, tokenizer=tokenizer, mlm_probability=0.1)
+train_dataset = SOPDataset(directory='E:/ConvbertData/text_data/cache', batch_size=1, tokenizer=tokenizer, mlm_probability=0.1)
 
 training_args = TrainingArguments(
     output_dir=model_dir,          # output directory
@@ -52,10 +52,10 @@ training_args = TrainingArguments(
     dataloader_num_workers=2
 )
 
-from torch.utils.tensorboard import SummaryWriter
-writer = SummaryWriter(runs)
+#from torch.utils.tensorboard import SummaryWriter
+#writer = SummaryWriter(runs)
 
-trainer = MyTrainer(model=model, args=training_args, train_dataset=train_dataset, prediction_loss_only=True, tb_writer=writer)
+#trainer = MyTrainer(model=model, args=training_args, train_dataset=train_dataset, prediction_loss_only=True, tb_writer=writer)
 
-trainer.train(model_path=model_dir)
-trainer.save_model()
+#trainer.train(model_path=model_dir)
+#trainer.save_model()

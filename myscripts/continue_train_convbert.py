@@ -7,10 +7,13 @@ def init_convbert_model(model):
     return model
 
 def main():
-    training_args, train_dataset, model_dir, output_dir = get_params('convbert', 18)
+    training_args, train_dataset, model_dir, output_dir = get_params('convbert_2', 18)
 
     checkpoint = get_last_checkpoint(output_dir)
-    
+    #checkpoint = get_last_checkpoint('E:/ConvbertData/convbert_test/output')
+    training_args.num_train_epochs = 4
+    #training_args.learning_rate = 0.000506
+
     model = ConvbertForPreTraining.from_pretrained(checkpoint)
     model = init_convbert_model(model)
     model.save_pretrained(model_dir)
