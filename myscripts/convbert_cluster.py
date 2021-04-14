@@ -54,12 +54,13 @@ def get_params(model_name, batch_size):
 
 def main():
     training_args, train_dataset, model_dir, output_dir = get_params('convbert_4', 18)
+    config = ConvbertConfig(hidden_size=768, num_attention_heads=12, intermediate_size=3072, attention_probs_dropout_prob=0, num_hidden_groups=4, num_hidden_layers=12, kernel_size=255)
 
     if len(sys.argv) > 1:
         checkpoint = get_last_checkpoint(output_dir)
         model = ConvbertForPreTraining.from_pretrained(checkpoint)
     else:
-        config = ConvbertConfig(hidden_size=768, num_attention_heads=12, intermediate_size=3072, attention_probs_dropout_prob=0, num_hidden_groups=4, num_hidden_layers=12, kernel_size=255)
+        
         config.save_pretrained(model_dir)
         model = ConvbertForPreTraining(config)
 
