@@ -53,7 +53,7 @@ def get_params(model_name, batch_size):
 
 
 def main():
-    continuation = True
+    continuation = False
     training_args, train_dataset, model_dir, output_dir = get_params('convbert_12_127', 18)
     config = ConvbertConfig(hidden_size=768, num_attention_heads=12, intermediate_size=3072, attention_probs_dropout_prob=0, num_hidden_groups=12, num_hidden_layers=12, kernel_size=127)
 
