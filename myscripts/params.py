@@ -1,6 +1,6 @@
 from transformers import Trainer, TrainingArguments
 from transformers import AlbertTokenizer, ConvbertForPreTraining, ConvbertConfig
-from transformers import AlbertForPreTraining, AlbertConfig
+from transformers import AlbertForPreTraining, AlbertConfig, AlbertModel
 from dataset import SOPDataset, MyTrainer
 import os
 
@@ -19,14 +19,14 @@ def get_last_checkpoint(dir_name):
 
 def init_convbert_model(config):
     model = ConvbertForPreTraining(config)
-    ready_model = AlbertForPreTraining.from_pretrained('albert-base-v2')
-    model.convbert.set_input_embeddings(ready_model.albert.get_input_embeddings())
+    ready_model = AlbertModel.from_pretrained('albert-base-v2')
+    model.convbert.set_input_embeddings(ready_model.get_input_embeddings())
     return model
 
 def init_albert_model(config):
     model = AlbertForPreTraining(config)
-    ready_model = AlbertForPreTraining.from_pretrained('albert-base-v2')
-    model.albert.set_input_embeddings(ready_model.albert.get_input_embeddings())
+    ready_model = AlbertModel.from_pretrained('albert-base-v2')
+    model.albert.set_input_embeddings(ready_model.get_input_embeddings())
     return model
 
 def get_params(model_name, batch_size):
