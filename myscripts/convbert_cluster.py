@@ -19,8 +19,8 @@ def get_last_checkpoint(dir_name):
 
 
 def init_convbert_model(config, model):
-    ready_model = AlbertModel.from_pretrained('albert-base-v2')
-    model.convbert.set_input_embeddings(ready_model.get_input_embeddings())
+    #ready_model = AlbertModel.from_pretrained('albert-base-v2')
+    #model.convbert.set_input_embeddings(ready_model.get_input_embeddings())
     return model
 
 def get_params(model_name, batch_size):
